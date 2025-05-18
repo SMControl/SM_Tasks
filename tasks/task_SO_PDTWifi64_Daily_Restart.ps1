@@ -1,4 +1,4 @@
-Write-Host "PDTWifi64_Daily_Restart.ps1 - Version 1.1"
+Write-Host "SO_PDTWifi64_Daily_Restart.ps1 - Version 1.1"
 # Creates a scheduled task to restart the PDTWiFi64 application daily at 5:00 AM.
 # Recent Changes
 # Version 1.1 - Reduced user messaging.
@@ -7,7 +7,7 @@ Write-Host "PDTWifi64_Daily_Restart.ps1 - Version 1.1"
 # PartVersion-1.1
 # -----
 $TaskName = "SO_PDTWifi64_Daily_Restart"
-$Description = "Restarts PDTWiFi at 5am Daily"
+$Description = "Task created by SM_Tasks. Restarts PDTWiFi at 5am Daily"
 $ActionExecute = "powershell.exe"
 $ActionArgument = "-Command if (Get-Process -Name PDTWiFi64 -ErrorAction SilentlyContinue) { Stop-Process -Name PDTWiFi64 -Force; Start-Sleep 5 }; Start-Process 'C:\Program Files (x86)\StationMaster\PDTWiFi64.exe'"
 $TriggerDaily = (New-ScheduledTaskTrigger -Daily -At 5:00AM)
