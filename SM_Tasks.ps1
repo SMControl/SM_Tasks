@@ -1,10 +1,12 @@
-Write-Host "SM_Tasks.ps1 - Version 1.16"
+Write-Host "SM_Tasks.ps1 - Version 1.17"
+# Downloads and extracts SM_Tasks, compares scheduled task names with script names, and presents a menu to the user.
+#
 # Part 1 - Configuration and Setup
 # PartVersion-1.02
 #LOCK=ON
 # -----
 $tempPath = "C:\winsm\temp_sm_tasks"
-$githubUrl = "https://github.com/SMControl/SM_Tasks/archive/refs/heads/main.zip"
+$githubUrl  = "https://github.com/SMControl/SM_Tasks/archive/refs/heads/main.zip"
 $zipFileName = "SM_Tasks.zip"
 $zipFilePath = Join-Path $tempPath $zipFileName
 $workingDirectory = ""
@@ -55,8 +57,7 @@ try {
     $extractedFolders = Get-ChildItem -Path $tempPath -Directory
     if ($extractedFolders.Count -eq 1) {
         $workingDirectory = $extractedFolders[0].FullName
-    }
-    else {
+    } else {
         Write-Host "Error: Could not determine extracted folder." -ForegroundColor Red
         Write-Error "Extraction failed. Exiting."
         Remove-Item -Path $tempPath -Recurse -Force
@@ -86,7 +87,7 @@ do {
     # -----
     Write-Host "Getting scheduled tasks..." -ForegroundColor Cyan
     try {
-        $scheduledTasks = Get-ScheduledTask | Where-Object {$_.TaskName -like "SO_*"} | Select-Object -ExpandProperty TaskName
+        $scheduledTasks = Get-ScheduledTask | Where-Object {$_.TaskName -like "SO *"} | Select-Object -ExpandProperty TaskName
     } catch {
         Write-Host "Error getting scheduled tasks: $_" -ForegroundColor Red
         Write-Error "Failed to get scheduled tasks. Exiting."
@@ -184,7 +185,7 @@ try {
     {
         Remove-Item -Path $tempPath -Recurse -Force
     }
-    
+
 
 } catch {
     Write-Host "Error cleaning up temp files: $_" -ForegroundColor Red
