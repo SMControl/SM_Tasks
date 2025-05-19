@@ -6,7 +6,7 @@ Write-Host "SO_PDTWifi64_Daily_Restart.ps1 - Version 1.1"
 # Part 1 - Define Task Parameters
 # PartVersion-1.1
 # -----
-$TaskName = "SO_PDTWifi64_Daily_Restart"
+$TaskName = "SO PDTWifi64_Daily_Restart"
 $Description = "Task created by SM_Tasks. Restarts PDTWiFi at 5am Daily"
 $ActionExecute = "powershell.exe"
 $ActionArgument = "-Command if (Get-Process -Name PDTWiFi64 -ErrorAction SilentlyContinue) { Stop-Process -Name PDTWiFi64 -Force; Start-Sleep 5 }; Start-Process 'C:\Program Files (x86)\StationMaster\PDTWiFi64.exe'"
