@@ -1,8 +1,8 @@
-Write-Host "SO_DebugLogClean.ps1 - Version 1.7"
-# ScriptVersion-1.7
+Write-Host "SO_DebugLogClean.ps1 - Version 1.8"
+# ScriptVersion-1.8
 # Creates a scheduled task to run the SODebugLogClean.exe application daily at midnight.
 # Recent Changes
-# Version 1.7 - Changed scheduled task name to "SO_DebugLogClean".
+# Version 1.8 - Changed scheduled task name to "SO DebugLogClean" (with a space).
 
 # Part 0 - Pre-Task Setup and Validation
 # PartVersion-1.2
@@ -51,10 +51,10 @@ catch {
 }
 
 # Part 1 - Define Task Parameters
-# PartVersion-1.4
+# PartVersion-1.5
 #LOCK=OFF
 # -----
-$TaskName = "SO_DebugLogClean"
+$TaskName = "SO DebugLogClean"
 $Description = "Task created by SM_Tasks. Runs SODebugLogClean.exe daily at midnight."
 $ActionExecute = $CleanExePath
 $ActionArgument = ""
