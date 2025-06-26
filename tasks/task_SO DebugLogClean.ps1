@@ -10,7 +10,7 @@ Write-Host "SO_DebugLogClean.ps1 - Version 1.8"
 # -----
 $CleanExePath = "C:\Program Files (x86)\StationMaster\SODebugLogClean.exe"
 $CleanExeDir = Split-Path -Path $CleanExePath -Parent
-$DownloadUrl = "https://github.com/SMControl/SM_Tasks/raw/main/bin/SODebugLogClean.exe"
+$DownloadUrl = "https://github.com/SMControl/SM_Tasks/blob/main/bin/SODebugLogClean.exe" 
 if (-not (Test-Path $CleanExeDir)) {
     try {
         New-Item -ItemType Directory -Path $CleanExeDir -Force | Out-Null
