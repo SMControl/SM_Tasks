@@ -1,16 +1,11 @@
-Write-Host "SO_DebugLogClean.ps1 - Version 1.8"
-# ScriptVersion-1.8
-# Creates a scheduled task to run the SODebugLogClean.exe application daily at midnight.
-# Recent Changes
-# Version 1.8 - Changed scheduled task name to "SO DebugLogClean" (with a space).
-
+Write-Host "SO_DebugLogClean.ps1 - Version 2.1"
 # Part 0 - Pre-Task Setup and Validation
-# PartVersion-1.2
+# PartVersion-1.5
 #LOCK=OFF
 # -----
 $CleanExePath = "C:\Program Files (x86)\StationMaster\SODebugLogClean.exe"
 $CleanExeDir = Split-Path -Path $CleanExePath -Parent
-$DownloadUrl = "https://github.com/SMControl/SM_Tasks/blob/main/bin/SODebugLogClean.exe" 
+$DownloadUrl = "https://github.com/SMControl/SM_Tasks/blob/main/bin/SODebugLogClean.exe"
 if (-not (Test-Path $CleanExeDir)) {
     try {
         New-Item -ItemType Directory -Path $CleanExeDir -Force | Out-Null
@@ -28,26 +23,6 @@ if (-not (Test-Path $CleanExePath)) {
         Write-Host -ForegroundColor Red "Error downloading SODebugLogClean.exe: $($_.Exception.Message)"
         exit 1
     }
-}
-$RegistryPath = "HKLM:\SOFTWARE\WOW6432Node\StationMaster\SM32\Debug"
-$RegistryValueName = "DebugLevel"
-$RequiredDebugLevel = 1
-if (-not (Test-Path $RegistryPath)) {
-    try {
-        New-Item -Path $RegistryPath -Force | Out-Null
-    }
-    catch {
-        Write-Host -ForegroundColor Red "Error creating registry path '$RegistryPath': $($_.Exception.Message)"
-    }
-}
-try {
-    $CurrentDebugLevel = (Get-ItemProperty -Path $RegistryPath -Name $RegistryValueName -ErrorAction SilentlyContinue).$RegistryValueName
-    if ($CurrentDebugLevel -ne $RequiredDebugLevel) {
-        Set-ItemProperty -Path $RegistryPath -Name $RegistryValueName -Value $RequiredDebugLevel -Force
-    }
-}
-catch {
-    Write-Host -ForegroundColor Red "Error checking or setting DebugLevel registry key: $($_.Exception.Message)"
 }
 
 # Part 1 - Define Task Parameters
