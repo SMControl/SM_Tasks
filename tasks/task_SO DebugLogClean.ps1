@@ -1,11 +1,11 @@
-Write-Host "SO_DebugLogClean.ps1 - Version 2.1"
+Write-Host "SO_DebugLogClean.ps1 - Version 2.2"
 # Part 0 - Pre-Task Setup and Validation
 # PartVersion-1.5
 #LOCK=OFF
 # -----
 $CleanExePath = "C:\Program Files (x86)\StationMaster\SODebugLogClean.exe"
 $CleanExeDir = Split-Path -Path $CleanExePath -Parent
-$DownloadUrl = "https://github.com/SMControl/SM_Tasks/blob/main/bin/SODebugLogClean.exe"
+$DownloadUrl = "https://github.com/SMControl/SM_Tasks/raw/refs/heads/main/bin/SODebugLogClean.exe"
 if (-not (Test-Path $CleanExeDir)) {
     try {
         New-Item -ItemType Directory -Path $CleanExeDir -Force | Out-Null
