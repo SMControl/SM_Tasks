@@ -1,10 +1,10 @@
-# ScriptVersion-1.0
+# ScriptVersion-1.1
 # Checks for and creates a scheduled task to run SO_Scheduler.exe with the TRANSFER_SP_CONFIG argument at a random time between 01:10 AM and 04:30 AM daily.
 # Recent Changes
-# Version 1.0 - Initial script creation.
+# Version 1.1 - Added principal for current user and domain.
 
 # Part 1 - Check if scheduled task exists and create if it doesn't
-# PartVersion 1.0
+# PartVersion 1.1
 #LOCK=ON
 # -----
 Write-Host "Checking for scheduled task 'SO system.dat_transfer'..."
@@ -29,9 +29,27 @@ if (-not $taskExists) {
     Write-Host "Scheduled time set to a random time between 01:10 and 04:30 daily: $randomTime"
     $trigger = New-ScheduledTaskTrigger -Daily -At $randomTime
     $settings = New-ScheduledTaskSettingsSet -Hidden:$true -ExecutionTimeLimit "PT30M"
-    $principal = New-ScheduledTaskPrincipal -RunLevel Highest
+} else {
+    Write-Host -ForegroundColor Green "Scheduled task 'SO system.dat_transfer' already exists. No action needed."
+}
 
-    # Register the task
+# Part 2 - Define Scheduled Task Principal
+# PartVersion 1.0
+#LOCK=ON
+# -----
+if (-not $taskExists) {
+    $PrincipalUser = "$env:USERDOMAIN\$env:USERNAME"
+    $PrincipalLogonType = "Interactive"
+    $PrincipalRunLevel = "Highest"
+
+    $principal = New-ScheduledTaskPrincipal -UserId $PrincipalUser -LogonType $PrincipalLogonType -RunLevel $PrincipalRunLevel
+}
+
+# Part 3 - Register the Scheduled Task
+# PartVersion 1.0
+#LOCK=ON
+# -----
+if (-not $taskExists) {
     try {
         Register-ScheduledTask -TaskName "SO system.dat_transfer" -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force
         Write-Host -ForegroundColor Green "Scheduled task 'SO system.dat_transfer' registered successfully."
@@ -39,6 +57,4 @@ if (-not $taskExists) {
     catch {
         Write-Host -ForegroundColor Red "Error registering scheduled task: $($_.Exception.Message)"
     }
-} else {
-    Write-Host -ForegroundColor Green "Scheduled task 'SO system.dat_transfer' already exists. No action needed."
 }
