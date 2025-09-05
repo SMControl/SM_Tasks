@@ -1,12 +1,13 @@
-# ScriptVersion-1.3
+# ScriptVersion-1.4
 # Checks for and creates a scheduled task to run SO_Scheduler.exe with the TRANSFER_SP_CONFIG argument at a random time between 00:00 AM and 04:00 AM daily.
 # Recent Changes
+# Version 1.4 - Added a descriptive name for the task.
 # Version 1.3 - Fixed TimeSpan conversion error and simplified task creation logic.
 # Version 1.2 - Simplified random time range to 00:00-04:00.
 # Version 1.1 - Added principal for current user and domain.
 
 # Part 1 - Check if scheduled task exists and create if it doesn't
-# PartVersion 1.3
+# PartVersion 1.4
 #LOCK=ON
 # -----
 Write-Host "Checking for scheduled task 'SO system.dat_transfer'..."
@@ -16,6 +17,8 @@ if (-not $taskExists) {
     Write-Host -ForegroundColor Green "Task not found. Creating a new scheduled task..."
 
     # Define task parameters
+    $TaskName = "SO system.dat_transfer"
+    $Description = "Task created by SM_Tasks. Transfers System.dat for Backup"
     $action = New-ScheduledTaskAction -Execute "C:\Program Files (x86)\Stationmaster\SoScheduler.exe" -Argument "TRANSFER_SP_CONFIG"
     
     # Generate random time between 00:00 and 04:00
@@ -38,7 +41,7 @@ if (-not $taskExists) {
 
     # Register the Scheduled Task
     try {
-        Register-ScheduledTask -TaskName "SO system.dat_transfer" -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force
+        Register-ScheduledTask -TaskName $TaskName -Description $Description -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force
         Write-Host -ForegroundColor Green "Scheduled task 'SO system.dat_transfer' registered successfully."
     }
     catch {
