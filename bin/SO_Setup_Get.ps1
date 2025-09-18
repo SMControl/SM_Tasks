@@ -1,5 +1,5 @@
-Write-Host "SO_Setup_Get.ps1 - Version 1.06"
-# Script Version 1.06
+Write-Host "SO_Setup_Get.ps1 - Version 1.08"
+# Script Version 1.08
 
 try {
     Write-Host "Checking Setup versions..." -ForegroundColor Green
@@ -63,7 +63,25 @@ if ($downloadedFiles.Count -gt 2) {
         Remove-Item -Path $file.FullName -Force
     }
 } else {
-#    Write-Host "No old installers to delete." -ForegroundColor Green
+#     Write-Host "No old installers to delete." -ForegroundColor Green
 }
 
+# Logical Part 4: Cleanup scheduled task and old executable
+# PartVersion 1.02
+#LOCK=OFF
+try {
+    if (Get-ScheduledTask -TaskName "SO InstallerUpdates" -ErrorAction SilentlyContinue) {
+        Unregister-ScheduledTask -TaskName "SO InstallerUpdates" -Confirm:$false
+    }
+} catch {
+    # Error message for scheduled task removal is suppressed
+}
+
+try {
+    if (Test-Path "C:\winsm\SO_UC.exe") {
+        Remove-Item -Path "C:\winsm\SO_UC.exe" -Force
+    }
+} catch {
+    # Error message for file deletion is suppressed
+}
 exit
