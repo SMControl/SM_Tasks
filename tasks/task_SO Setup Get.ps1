@@ -1,11 +1,14 @@
-# ScriptVersion-1.1
+# SO Setup Get Task Script Version 1.4
 # Creates a scheduled task to run the SO_Setup_Get.ps1 script from a remote URL at a random time between 01:00 AM and 06:00 AM daily.
 # Recent Changes
+# Version 1.4 - Updated -Argument to include -NoProfile and -NonInteractive.
+# Version 1.3 - Added -NonInteractive and -NoProfile to the scheduled task argument for more robust execution.
+# Version 1.2 - Added -ExecutionPolicy Bypass -Command to the scheduled task argument.
 # Version 1.1 - Changed random time range to 01:00-06:00.
 # Version 1.0 - Initial script creation.
 
 # Part 1 - Check if scheduled task exists and create if it doesn't
-# PartVersion 1.1
+# PartVersion 1.4
 #LOCK=OFF
 # -----
 Write-Host "Checking for scheduled task 'SO Setup Get'..."
@@ -17,7 +20,7 @@ if (-not $taskExists) {
     # Define task parameters
     $TaskName = "SO Setup Get"
     $Description = "Task created by SM_Tasks. Checks for newer versions of the SO Installer Setup exe and obtains if new."
-    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "irm https://raw.githubusercontent.com/SMControl/SM_Tasks/refs/heads/main/bin/SO_Setup_Get.ps1 | iex"
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -NoProfile -NonInteractive -Command irm https://raw.githubusercontent.com/SMControl/SM_Tasks/refs/heads/main/bin/SO_Setup_Get.ps1 | iex"
     
     # Generate random time between 01:00 and 06:00
     $randomHour = Get-Random -Minimum 1 -Maximum 6
