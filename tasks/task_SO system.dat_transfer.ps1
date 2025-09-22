@@ -18,7 +18,7 @@ if (-not $taskExists) {
 
     # Define task parameters
     $TaskName = "SO system.dat_transfer"
-    $Description = "Task created by SM_Tasks. Transfers System.dat for Backup"
+    $Description = "Transfers System.dat for Backup"
     $action = New-ScheduledTaskAction -Execute "C:\Program Files (x86)\Stationmaster\SoScheduler.exe" -Argument "TRANSFER_SP_CONFIG"
     
     # Generate random time between 00:00 and 04:00
