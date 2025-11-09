@@ -1,6 +1,6 @@
-Write-Host "task_SO WHS SEND SALES W.ps1 - Version 1.1"
+Write-Host "task_SO PROCESS SALES.ps1 - Version 1.1"
 # ScriptVersion-1.1
-# Checks for and creates a scheduled task to run SOScheduler.exe with the WHSSENDSALES W argument at a random time between 02:00 AM and 04:00 AM every Sunday and Monday.
+# Checks for and creates a scheduled task to run SOScheduler.exe with the PROCESSSALES argument daily at 1:00 AM, 3:00 AM, and 5:00 AM.
 # Recent Changes
 # Version 1.1 - Increased ExecutionTimeLimit from 30 minutes to 2 hours.
 
@@ -8,7 +8,7 @@ Write-Host "task_SO WHS SEND SALES W.ps1 - Version 1.1"
 # PartVersion 1.0
 #LOCK=OFF
 # -----
-$TaskName = "SO WHS SEND SALES W"
+$TaskName = "SO PROCESS SALES"
 
 Write-Host "Checking for scheduled task '$TaskName'..."
 $taskExists = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
@@ -17,35 +17,32 @@ if (-not $taskExists) {
     Write-Host -ForegroundColor Green "Task not found. Creating a new scheduled task..."
 
     # Define task parameters
-    $Description = "Executes the SOScheduler WHSSENDSALES W argument weekly on Sunday and Monday."
+    $Description = "Executes the SOScheduler PROCESSSALES argument daily at 1am, 3am, and 5am."
     $ActionExecute = "C:\Program Files (x86)\StationMaster\SOScheduler.exe"
-    $ActionArgument = "WHSSENDSALES W"
-
+    $ActionArgument = "PROCESSSALES"
+    
     # Define Scheduled Task Principal (Uses current interactive user context)
     $PrincipalUser = "$env:USERDOMAIN\$env:USERNAME"
     $PrincipalLogonType = "Interactive"
     $PrincipalRunLevel = "Highest"
 
-    # Part 2 - Define Action, Trigger, and Settings
+    # Part 2 - Define Action, Triggers, and Settings
     # PartVersion 1.1
     #LOCK=OFF
     # -----
     $action = New-ScheduledTaskAction -Execute $ActionExecute -Argument $ActionArgument
     
-    # Generate random time between 02:00 and 04:00 (Hours 2, 3, and 4)
-    # The -Maximum parameter for Get-Random is exclusive for the upper bound (using 5 to include 4).
-    $randomHour = Get-Random -Minimum 2 -Maximum 5
-    $randomMinute = Get-Random -Minimum 0 -Maximum 59
+    # Define the three fixed daily triggers
+    $Trigger1AM = (New-ScheduledTaskTrigger -Daily -At "01:00 AM")
+    $Trigger3AM = (New-ScheduledTaskTrigger -Daily -At "03:00 AM")
+    $Trigger5AM = (New-ScheduledTaskTrigger -Daily -At "05:00 AM")
     
-    # Format the time string
-    $randomTime = "{0:D2}:{1:D2}" -f $randomHour, $randomMinute
+    # Combine all triggers into an array
+    $Triggers = @($Trigger1AM, $Trigger3AM, $Trigger5AM)
 
-    Write-Host "Scheduled time set to a random time between 02:00 and 04:00 weekly: $randomTime"
-    
-    # Define Weekly Trigger for Sunday and Monday
-    $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday, Monday -At $randomTime
-    
-    # Increased ExecutionTimeLimit to 2 hours (New-TimeSpan -Hours 2)
+    Write-Host "Scheduled times set to 01:00 AM, 03:00 AM, and 05:00 AM daily."
+
+    # ExecutionTimeLimit increased to 2 hours
     $settings = New-ScheduledTaskSettingsSet -Hidden:$true -ExecutionTimeLimit (New-TimeSpan -Hours 2)
     $principal = New-ScheduledTaskPrincipal -UserId $PrincipalUser -LogonType $PrincipalLogonType -RunLevel $PrincipalRunLevel
 
@@ -54,8 +51,9 @@ if (-not $taskExists) {
     #LOCK=OFF
     # -----
     try {
-        Register-ScheduledTask -TaskName $TaskName -Description $Description -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force
-        Write-Host -ForegroundColor Green "Scheduled task '$TaskName' registered successfully."
+        # Note: The -Trigger parameter accepts an array of triggers.
+        Register-ScheduledTask -TaskName $TaskName -Description $Description -Action $action -Trigger $Triggers -Settings $settings -Principal $principal -Force
+        Write-Host -ForegroundColor Green "Scheduled task '$TaskName' registered successfully with 3 daily triggers."
     }
     catch {
         Write-Host -ForegroundColor Red "Error registering scheduled task '$TaskName': $($_.Exception.Message)"
