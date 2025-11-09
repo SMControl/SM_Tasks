@@ -1,6 +1,8 @@
-Write-Host "task_SO ED IMPORT.ps1 - Version 1.0"
-# ScriptVersion-1.0
-# Checks for and creates a scheduled task to run SOScheduler.exe with the EDIMPORT argument every 5 minutes, 24 hours a day.
+Write-Host "task_SO ED IMPORT.ps1 - Version 1.1"
+# ScriptVersion-1.1
+# Checks for and creates a scheduled task to run SOScheduler.exe with the EDIMPORT argument every 5 minutes, 24 hours a day, using schtasks.exe for highest compatibility.
+# Recent Changes
+# Version 1.1 - Complete rewrite to use schtasks.exe command line with /ri (Repeat Interval) and /du (Duration) arguments. This is the most reliable method for legacy Windows versions.
 
 # Part 1 - Check if scheduled task exists and define parameters
 # PartVersion 1.0
@@ -18,43 +20,42 @@ if (-not $taskExists) {
     $Description = "Executes the SOScheduler EDIMPORT argument every 5 minutes, 24/7."
     $ActionExecute = "C:\Program Files (x86)\StationMaster\SOScheduler.exe"
     $ActionArgument = "EDIMPORT"
-    
-    # Define Scheduled Task Principal (Uses current interactive user context)
     $PrincipalUser = "$env:USERDOMAIN\$env:USERNAME"
-    $PrincipalLogonType = "Interactive"
-    $PrincipalRunLevel = "Highest"
-
-    # Part 2 - Define Action, Triggers, and Settings
-    # PartVersion 1.0
-    #LOCK=OFF
-    # -----
-    $action = New-ScheduledTaskAction -Execute $ActionExecute -Argument $ActionArgument
+    $LogonType = "/IT" # /IT = Interactive Token (run only when user is logged in)
     
-    # Define the trigger: Daily, starting at midnight
-    # The repetition setting below handles the 5-minute execution frequency.
-    $trigger = New-ScheduledTaskTrigger -Daily -At "00:00 AM"
-
-    Write-Host "Scheduled time set to repeat every 5 minutes for 24 hours, starting daily at 00:00 AM."
-
-    # Define settings: Hidden, 30 min timeout, repeat every 5 minutes for 1 day
-    $settings = New-ScheduledTaskSettingsSet -Hidden:$true `
-        -ExecutionTimeLimit (New-TimeSpan -Minutes 30) `
-        -RepetitionInterval (New-TimeSpan -Minutes 5) `
-        -RepetitionDuration (New-TimeSpan -Days 1) `
-        -StartWhenAvailable:$true # This ensures the task runs immediately after a system restart if it was missed.
-        
-    $principal = New-ScheduledTaskPrincipal -UserId $PrincipalUser -LogonType $PrincipalLogonType -RunLevel $PrincipalRunLevel
-
-    # Part 3 - Register the Scheduled Task
-    # PartVersion 1.0
+    # Part 2 - Register the Scheduled Task using schtasks.exe
+    # schtasks.exe is the most compatible way to create repetitive tasks on legacy systems.
+    # Arguments:
+    # /create: Create a new task
+    # /tn: Task Name
+    # /tr: Task Run (Executable and Arguments)
+    # /sc DAILY: Schedule Daily
+    # /st 00:00:00: Start Time (Midnight)
+    # /ri 5: Repeat Interval (5 minutes)
+    # /du 24:00: Duration (24 hours, in required legacy HHHH:MM format)
+    # /rl HIGHEST: Run Level (Highest)
+    # /it: Interactive Only (Logon Type)
+    # /f: Force (Overwrite if it exists, though we check first)
+    # PartVersion 1.1
     #LOCK=OFF
     # -----
+    
+    Write-Host "Scheduled time set to repeat every 5 minutes for 24 hours, starting daily at 00:00:00."
+
     try {
-        Register-ScheduledTask -TaskName $TaskName -Description $Description -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force
-        Write-Host -ForegroundColor Green "Scheduled task '$TaskName' registered successfully."
+        # Note the required duration format: /du 24:00
+        $result = schtasks.exe /create /tn "$TaskName" /tr "`"$ActionExecute`" $ActionArgument" /sc DAILY /st 00:00:00 /ri 5 /du 24:00 /rl HIGHEST /it /f
+        
+        if ($result -match "SUCCESS") {
+            Write-Host -ForegroundColor Green "Scheduled task '$TaskName' registered successfully via schtasks.exe."
+        }
+        else {
+            Write-Host -ForegroundColor Red "Error registering scheduled task '$TaskName' via schtasks.exe."
+            Write-Host -ForegroundColor Red "schtasks.exe output: $result"
+        }
     }
     catch {
-        Write-Host -ForegroundColor Red "Error registering scheduled task '$TaskName': $($_.Exception.Message)"
+        Write-Host -ForegroundColor Red "Error executing schtasks.exe command: $($_.Exception.Message)"
     }
 } else {
     Write-Host -ForegroundColor Green "Scheduled task '$TaskName' already exists. No action needed."
