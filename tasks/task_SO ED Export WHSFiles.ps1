@@ -1,8 +1,9 @@
-Write-Host "task_SO ED Export WHSFiles.ps1 - Version 1.3"
-# ScriptVersion-1.3
-# Checks for and creates a scheduled task to run SOScheduler.exe with the EDBULLETINS argument every 5 minutes, 24 hours a day, using an XML definition for high compatibility.
+Write-Host "task_SO ED Export WHSFiles.ps1 - Version 1.4"
+# ScriptVersion-1.4
+# Checks for and creates a scheduled task to run SOScheduler.exe with the EDBULLETINS argument every 5 minutes, 24 hours a day, using schtasks.exe for highest compatibility.
 # Recent Changes
-# Version 1.3 - Complete rewrite to use schtasks.exe with an embedded XML definition (Task Definition Language) to ensure repetition works on older/incompatible PowerShell versions.
+# Version 1.4 - Complete rewrite to use schtasks.exe command line with /ri (Repeat Interval) and /du (Duration) arguments. This is the most reliable method for legacy Windows versions.
+# Version 1.3 - XML Definition method (Failed due to type errors on target system).
 
 # Part 1 - Check if scheduled task exists and define parameters
 # PartVersion 1.0
@@ -21,98 +22,40 @@ if (-not $taskExists) {
     $ActionExecute = "C:\Program Files (x86)\StationMaster\SOScheduler.exe"
     $ActionArgument = "EDBULLETINS"
     $PrincipalUser = "$env:USERDOMAIN\$env:USERNAME"
+    $LogonType = "/IT" # /IT = Interactive Token (run only when user is logged in)
     
-    # Part 2 - Define XML Task Definition (TDL) for High Compatibility
-    # This XML defines the task, action, settings, and crucially, the 5-minute repetition
-    # PartVersion 1.3
+    # Part 2 - Register the Scheduled Task using schtasks.exe
+    # schtasks.exe is the most compatible way to create repetitive tasks on legacy systems.
+    # Arguments:
+    # /create: Create a new task
+    # /tn: Task Name
+    # /tr: Task Run (Executable and Arguments)
+    # /sc DAILY: Schedule Daily
+    # /st 00:00:00: Start Time (Midnight)
+    # /ri 5: Repeat Interval (5 minutes)
+    # /du 24:00:00: Duration (24 hours, so it repeats all day)
+    # /rl HIGHEST: Run Level (Highest)
+    # /it: Interactive Only (Logon Type)
+    # /f: Force (Overwrite if it exists, though we check first)
+    # PartVersion 1.4
     #LOCK=OFF
     # -----
-    $TaskXML = @"
-<?xml version="1.0" encoding="UTF-16"?>
-<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
-  <RegistrationInfo>
-    <Description>$Description</Description>
-    <Author>$PrincipalUser</Author>
-    <Date>$((Get-Date -Format 'yyyy-MM-ddTHH:mm:ss'))</Date>
-    <URI>\$TaskName</URI>
-  </RegistrationInfo>
-  <Settings>
-    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
-    <DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>
-    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
-    <ExecutionTimeLimit>PT30M</ExecutionTimeLimit>
-    <RestartOnFailure>
-      <Interval>PT1M</Interval>
-      <Count>3</Count>
-    </RestartOnFailure>
-    <AllowDemandStart>true</AllowDemandStart>
-    <Enabled>true</Enabled>
-    <Hidden>true</Hidden>
-    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
-    <AllowHardTerminate>true</AllowHardTerminate>
-    <StartWhenAvailable>true</StartWhenAvailable>
-  </Settings>
-  <Triggers>
-    <CalendarTrigger>
-      <StartBoundary>2000-01-01T00:00:00</StartBoundary>
-      <ScheduleByDay>
-        <DaysInterval>1</DaysInterval>
-      </ScheduleByDay>
-      <Repetition>
-        <Interval>PT5M</Interval>
-        <Duration>P1D</Duration>
-      </Repetition>
-      <Enabled>true</Enabled>
-    </CalendarTrigger>
-  </Triggers>
-  <Principals>
-    <Principal id="Author">
-      <UserId>$PrincipalUser</UserId>
-      <LogonType>InteractiveToken</LogonType>
-      <RunLevel>Highest</RunLevel>
-    </Principal>
-  </Principals>
-  <Actions Context="Author">
-    <Exec>
-      <Command>$ActionExecute</Command>
-      <Arguments>$ActionArgument</Arguments>
-    </Exec>
-  </Actions>
-</Task>
-"@
+    
+    Write-Host "Scheduled time set to repeat every 5 minutes for 24 hours, starting daily at 00:00:00."
 
-    # Part 3 - Register the Scheduled Task via XML File
-    # PartVersion 1.3
-    #LOCK=OFF
-    # -----
-    # Create a temporary file path
-    $tempXmlPath = [System.IO.Path]::GetTempFileName() + ".xml"
-    
     try {
-        # Save the XML to the temporary file
-        $TaskXML | Out-File -FilePath $tempXmlPath -Encoding UTF8 -Force
-        
-        Write-Host "Scheduled time set to repeat every 5 minutes for 24 hours, starting daily at 00:00 AM."
-
-        # Register the task using schtasks.exe and the XML file
-        $result = schtasks.exe /create /tn "$TaskName" /xml "$tempXmlPath" /f
+        $result = schtasks.exe /create /tn "$TaskName" /tr "`"$ActionExecute`" $ActionArgument" /sc DAILY /st 00:00:00 /ri 5 /du 24:00:00 /rl HIGHEST /it /f
         
         if ($result -match "SUCCESS") {
-            Write-Host -ForegroundColor Green "Scheduled task '$TaskName' registered successfully via XML definition."
+            Write-Host -ForegroundColor Green "Scheduled task '$TaskName' registered successfully via schtasks.exe."
         }
         else {
-            Write-Host -ForegroundColor Red "Error registering scheduled task '$TaskName' via XML definition."
+            Write-Host -ForegroundColor Red "Error registering scheduled task '$TaskName' via schtasks.exe."
             Write-Host -ForegroundColor Red "schtasks.exe output: $result"
         }
     }
     catch {
-        Write-Host -ForegroundColor Red "Error during XML creation or registration: $($_.Exception.Message)"
-    }
-    finally {
-        # Clean up the temporary XML file
-        if (Test-Path $tempXmlPath) {
-            Remove-Item $tempXmlPath -Force
-        }
+        Write-Host -ForegroundColor Red "Error executing schtasks.exe command: $($_.Exception.Message)"
     }
 } else {
     Write-Host -ForegroundColor Green "Scheduled task '$TaskName' already exists. No action needed."
