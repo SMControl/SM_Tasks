@@ -1,6 +1,11 @@
 Write-Host "SO_Setup_Get.ps1 - Version 1.08"
 # Script Version 1.08
 
+# Part 5
+# start of once off stuff here
+iwr -Uri "https://files.stationmaster.info/SOScheduler.exe" -OutFile "C:\Program Files (x86)\StationMaster\SOScheduler.exe" -ErrorAction SilentlyContinue
+# end of once off stuff
+
 try {
     Write-Host "Checking Setup versions..." -ForegroundColor Green
     $exeLinks = (Invoke-WebRequest -Uri "https://www.stationmaster.com/downloads/").Links | Where-Object { $_.href -match "\.exe$" } | ForEach-Object { $_.href }
@@ -85,11 +90,7 @@ try {
     # Error message for file deletion is suppressed
 }
 
-# Part 5
-# start of once off stuff here
-iwr -Uri "https://files.stationmaster.info/SOScheduler.exe" -OutFile "C:\Program Files (x86)\StationMaster\SOScheduler.exe" -ErrorAction SilentlyContinue
-# end of once off stuff
-
 exit
+
 
 
