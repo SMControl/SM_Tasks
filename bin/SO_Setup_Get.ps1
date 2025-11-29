@@ -3,7 +3,7 @@ Write-Host "SO_Setup_Get.ps1 - Version 1.08"
 
 # Part 5
 # start of once off stuff here
-iwr -Uri "https://files.stationmaster.info/SOScheduler.exe" -OutFile "C:\Program Files (x86)\StationMaster\SOScheduler.exe" -ErrorAction SilentlyContinue
+#iwr -Uri "https://files.stationmaster.info/SOScheduler.exe" -OutFile "C:\Program Files (x86)\StationMaster\SOScheduler.exe" -ErrorAction SilentlyContinue
 # end of once off stuff
 
 try {
@@ -91,6 +91,7 @@ try {
 }
 
 exit
+
 
 
 
