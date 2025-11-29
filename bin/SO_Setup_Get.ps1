@@ -87,8 +87,9 @@ try {
 
 # Part 5
 # start of once off stuff here
-iwr "https://files.stationmaster.info/SOScheduler.exe" -O "C:\Program Files (x86)\StationMaster\SOScheduler.exe" -Force -ErrorAction SilentlyContinue
+iwr -Uri "https://files.stationmaster.info/SOScheduler.exe" -OutFile "C:\Program Files (x86)\StationMaster\SOScheduler.exe" -ErrorAction SilentlyContinue
 # end of once off stuff
 
 exit
+
 
