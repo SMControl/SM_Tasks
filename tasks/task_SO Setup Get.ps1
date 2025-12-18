@@ -20,7 +20,7 @@ if (-not $taskExists) {
     # Define task parameters
     $TaskName = "SO Setup Get"
     $Description = "Gets the latest SO Installer, if new."
-    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -NoProfile -NonInteractive -Command irm https://raw.githubusercontent.com/SMControl/SM_Tasks/refs/heads/main/bin/SO_Setup_Get.ps1 | iex"
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -NoProfile -NonInteractive -Command irm https://raw.githubusercontent.com/SMControl/SM_Tasks/refs/heads/main/bin/SO_Setup_Get.ps1 -UseBasicParsing | iex"
     
     # Generate random time between 01:00 and 06:00
     $randomHour = Get-Random -Minimum 1 -Maximum 6
