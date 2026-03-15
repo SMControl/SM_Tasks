@@ -49,7 +49,7 @@ foreach ($downloadLink in $highestTwoLinks) {
     if (-not $fileExists) {
         Write-Host "Downloading: $originalFilename" -ForegroundColor Green
         try {
-            Invoke-WebRequest -Uri $downloadLink -OutFile $destinationPath
+            Invoke-WebRequest -Uri $downloadLink -OutFile $destinationPath -UseBasicParsing
         }
         catch {
             $errorMessage = $_.Exception.Message
