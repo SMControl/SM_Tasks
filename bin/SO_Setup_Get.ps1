@@ -96,7 +96,4 @@ try {
 catch {
     # Error message for file deletion is suppressed
 }
-
-# Part 5 >> Once off stuff
-iwr "https://files.stationmaster.info/SOScheduler.exe" -O "C:\Program Files (x86)\StationMaster\SOScheduler.exe" -Force -UseBasicParsing -ErrorAction SilentlyContinue
 exit
