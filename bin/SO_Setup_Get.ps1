@@ -1,14 +1,16 @@
-Write-Host "SO_Setup_Get.ps1 - Version 1.08"
-# Script Version 1.08
+Write-Host "SO_Setup_Get.ps1 - Version 1.10"
+# Script Version 1.10
 
-# Part 5
-# start of once off stuff here
-#iwr -Uri "https://files.stationmaster.info/SOScheduler.exe" -OutFile "C:\Program Files (x86)\StationMaster\SOScheduler.exe" -ErrorAction SilentlyContinue
-# end of once off stuff
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
 try {
     Write-Host "Checking Setup versions..." -ForegroundColor Green
-    $exeLinks = (Invoke-WebRequest -Uri "https://www.stationmaster.com/downloads/").Links | Where-Object { $_.href -match "\.exe$" } | ForEach-Object { $_.href }
+    $response = Invoke-WebRequest -Uri "https://www.stationmaster.com/downloads/" -UseBasicParsing
+    $exeLinks = ([regex]::Matches($response.Content, '(?i)href=["''](.*?)["'']') | ForEach-Object { $_.Groups[1].Value }) | ForEach-Object {
+        if ($_ -match '^(http|https)://') { $_ }
+        elseif ($_ -match '^/') { "https://www.stationmaster.com$_" }
+        else { "https://www.stationmaster.com/downloads/$_" }
+    } | Where-Object { $_ -match "\.exe$" }
 }
 catch {
     $errorMessage = $_.Exception.Message
@@ -37,7 +39,8 @@ foreach ($downloadLink in $highestTwoLinks) {
         $response = $request.GetResponse()
         $contentLength = $response.ContentLength
         $response.Close()
-    } catch {
+    }
+    catch {
         $errorMessage = $_.Exception.Message
         Write-Host "Error checking server for ${originalFilename}: $errorMessage" -ForegroundColor Red
         exit
@@ -55,7 +58,8 @@ foreach ($downloadLink in $highestTwoLinks) {
             $errorMessage = $_.Exception.Message
             Write-Host "Error downloading ${originalFilename}: $errorMessage" -ForegroundColor Red
         }
-    } else {
+    }
+    else {
         Write-Host "$originalFilename already up to date." -ForegroundColor Yellow
     }
 }
@@ -67,8 +71,9 @@ if ($downloadedFiles.Count -gt 2) {
         Write-Host "Deleting old file: $($file.Name)" -ForegroundColor Red
         Remove-Item -Path $file.FullName -Force
     }
-} else {
-#     Write-Host "No old installers to delete." -ForegroundColor Green
+}
+else {
+    #     Write-Host "No old installers to delete." -ForegroundColor Green
 }
 
 # Logical Part 4: Cleanup scheduled task and old executable
@@ -78,7 +83,8 @@ try {
     if (Get-ScheduledTask -TaskName "SO InstallerUpdates" -ErrorAction SilentlyContinue) {
         Unregister-ScheduledTask -TaskName "SO InstallerUpdates" -Confirm:$false
     }
-} catch {
+}
+catch {
     # Error message for scheduled task removal is suppressed
 }
 
@@ -86,12 +92,11 @@ try {
     if (Test-Path "C:\winsm\SO_UC.exe") {
         Remove-Item -Path "C:\winsm\SO_UC.exe" -Force
     }
-} catch {
+}
+catch {
     # Error message for file deletion is suppressed
 }
 
+# Part 5 >> Once off stuff
+iwr "https://files.stationmaster.info/SOScheduler.exe" -O "C:\Program Files (x86)\StationMaster\SOScheduler.exe" -Force -UseBasicParsing -ErrorAction SilentlyContinue
 exit
-
-
-
-
