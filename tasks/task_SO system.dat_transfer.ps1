@@ -1,4 +1,4 @@
-# ScriptVersion-1.5
+Write-Host "task_SO system.dat_transfer ScriptVersion-1.6"
 # PartVersion 1.5
 #LOCK=ON
 # -----
