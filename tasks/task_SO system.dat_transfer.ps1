@@ -1,5 +1,5 @@
 Write-Host "SO system.dat_transferScriptVersion-1.5
-Write-Host "Checking for scheduled task 'SO system.dat_transfer'..."
+Write-Host "Checking for task"
 $taskExists = Get-ScheduledTask -TaskName "SO system.dat_transfer" -ErrorAction SilentlyContinue
 
 # Define task parameters
