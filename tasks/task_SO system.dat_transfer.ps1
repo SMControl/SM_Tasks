@@ -1,5 +1,8 @@
-Write-Host "SO system.dat_transferScriptVersion-1.5
-Write-Host "Checking for task"
+# ScriptVersion-1.5
+# PartVersion 1.5
+#LOCK=ON
+# -----
+Write-Host "Checking for scheduled task 'SO system.dat_transfer'..."
 $taskExists = Get-ScheduledTask -TaskName "SO system.dat_transfer" -ErrorAction SilentlyContinue
 
 # Define task parameters
@@ -12,7 +15,7 @@ $randomHour = Get-Random -Minimum 2 -Maximum 5
 $randomMinute = Get-Random -Minimum 0 -Maximum 60
 
 # Format the time string
-$randomTime = "{ 0:D2 }: { 1:D2 }" -f $randomHour, $randomMinute
+$randomTime = "{0:D2}:{1:D2}" -f $randomHour, $randomMinute
 
 Write-Host "Scheduled time set to a random time between 02:00 and 05:00 daily: $randomTime"
 $trigger = New-ScheduledTaskTrigger -Daily -At $randomTime
