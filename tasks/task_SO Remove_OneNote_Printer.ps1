@@ -1,10 +1,10 @@
-# task_SO Remove_OneNote_Printer.ps1 v1.00
+# task_SO Remove_OneNote_Printer.ps1 v1.01
 <#
 .SYNOPSIS
     Creates a standalone Windows Scheduled Task that removes any OneNote printer every 10 minutes
     without requiring any script files to remain on disk.
 .DESCRIPTION
-    Designed for vanilla Windows 10 and Windows 11.
+    Designed for vanilla Windows 10 and Windows 11 (compatible with both PowerShell 5.1 and 7+).
     Embeds a native PowerShell one-liner directly inside the Scheduled Task Action using
     Remove-Printer with wildcards ('*OneNote*', '*One Note*') so no external .ps1 file is needed.
     Runs silently every 10 minutes under NT AUTHORITY\SYSTEM with Highest Privileges.
@@ -78,7 +78,7 @@ function Test-IsAdministrator {
 }
 
 # ==============================================================================
-# Part 3: Standalone Scheduled Task Registration [PartVersion 1.00]
+# Part 3: Standalone Scheduled Task Registration [PartVersion 1.01]
 # ==============================================================================
 try {
     # Verify the script is running with Administrator rights before touching SYSTEM tasks.
@@ -107,9 +107,10 @@ try {
     $Action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $TaskArguments
 
     # 2. Trigger: Start immediately and repeat every 10 minutes indefinitely.
+    #    Note: Omitting -RepetitionDuration sets the Windows Task Scheduler XML Duration to empty (Indefinitely)
+    #    and avoids the PowerShell 7 [TimeSpan]::MaxValue XML out-of-range error (P99999999DT23H59M59S).
     $Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
-        -RepetitionInterval (New-TimeSpan -Minutes 10) `
-        -RepetitionDuration ([TimeSpan]::MaxValue)
+        -RepetitionInterval (New-TimeSpan -Minutes 10)
 
     # 3. Principal: Run as NT AUTHORITY\SYSTEM with Highest Privileges so it runs silently for all users.
     $Principal = New-ScheduledTaskPrincipal -UserId 'NT AUTHORITY\SYSTEM' -LogonType ServiceAccount -RunLevel Highest
@@ -123,6 +124,7 @@ try {
         -ExecutionTimeLimit (New-TimeSpan -Minutes 2)
 
     # Register (or overwrite) the task in Windows Task Scheduler.
+    # Explicitly pass -ErrorAction Stop because CIM cmdlets in PS7 can otherwise emit non-terminating errors.
     Register-ScheduledTask `
         -TaskName $TaskName `
         -TaskPath $TaskPath `
@@ -131,16 +133,16 @@ try {
         -Trigger $Trigger `
         -Principal $Principal `
         -Settings $Settings `
-        -Force | Out-Null
+        -Force `
+        -ErrorAction Stop | Out-Null
 
     Write-UiMessage -Message "[OK] Registered standalone Scheduled Task '$TaskName' (no script on disk required)." -Level 'Success'
 
     # Trigger the task immediately to clean up any OneNote printer currently present.
-    Start-ScheduledTask -TaskName $TaskName
+    Start-ScheduledTask -TaskName $TaskName -ErrorAction Stop
     Write-UiMessage -Message "[OK] Triggered immediate first run of '$TaskName'." -Level 'Success'
 }
 catch {
     Write-UiMessage -Message "[ERROR] Failed to register Scheduled Task '$TaskName': $($_.Exception.Message)" -Level 'Error'
     exit 1
 }
-
